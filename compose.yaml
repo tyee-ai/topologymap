@@ -1,0 +1,7 @@
+services:
+  topology-map:
+    build: .
+    image: gpu-fabric-topology:local
+    ports:
+      - "43147:80"
+    restart: unless-stopped

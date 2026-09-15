@@ -1,0 +1,138 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <link rel="icon" type="image/svg+xml" href="/favicon.svg" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>4K GPU Fabric Topology — NVIDIA NCP Reference Architecture</title>
+  </head>
+  <body>
+    <header>
+      <div class="title-area">
+        <h1>4,096 GPU Fabric Topology <span class="badge">NVIDIA NCP RA-11750-001 V4</span></h1>
+        <div class="subtitle">511 HGX + 2 UFM HA (16 SUs) → 16 SLGs (128 Leaf / 128 Spine) → 16 Core Groups (64 Core MQM9790)</div>
+      </div>
+      <div class="stats-bar">
+        <div>Compute: <span>4,088 GPUs (511 HGX)</span></div>
+        <div>Management: <span>2 UFM HA</span></div>
+        <div>SUs: <span>16 (SU 1..16)</span></div>
+        <div>SLGs: <span>16 (SLG 1..16)</span></div>
+        <div>Leafs: <span>128 (16×8)</span></div>
+        <div>Spines: <span>128 (16×8)</span></div>
+        <div>Cores: <span>64 (16×4)</span></div>
+      </div>
+      <div class="toolbar">
+        <button class="btn primary" type="button" data-action="copy-drawio">Copy Draw.io XML</button>
+        <button class="btn" type="button" data-action="download-drawio">Download .drawio</button>
+        <button class="btn" type="button" data-action="zoom-in">Zoom +</button>
+        <button class="btn" type="button" data-action="zoom-out">Zoom −</button>
+        <button class="btn" type="button" data-action="fit-view">Fit View</button>
+      </div>
+    </header>
+
+    <div class="control-strip">
+      <div class="control-group">
+        <label class="control-label" for="su-selector">Highlight Scalable Unit (SU):</label>
+        <select class="su-select" id="su-selector">
+          <option value="all">Show All SUs (Macro Overview)</option>
+          <option value="1">SU 1 (HGX 1..32) → SLG 1</option>
+          <option value="2">SU 2 (HGX 33..64) → SLG 2</option>
+          <option value="3">SU 3 (HGX 65..96) → SLG 3</option>
+          <option value="4">SU 4 (HGX 97..128) → SLG 4</option>
+          <option value="5">SU 5 (HGX 129..160) → SLG 5</option>
+          <option value="6">SU 6 (HGX 161..192) → SLG 6</option>
+          <option value="7">SU 7 (HGX 193..224) → SLG 7</option>
+          <option value="8">SU 8 (HGX 225..256) → SLG 8</option>
+          <option value="9">SU 9 (HGX 257..288) → SLG 9</option>
+          <option value="10">SU 10 (HGX 289..320) → SLG 10</option>
+          <option value="11">SU 11 (HGX 321..352) → SLG 11</option>
+          <option value="12">SU 12 (HGX 353..384) → SLG 12</option>
+          <option value="13">SU 13 (HGX 385..416) → SLG 13</option>
+          <option value="14">SU 14 (HGX 417..448) → SLG 14</option>
+          <option value="15">SU 15 (HGX 449..480) → SLG 15</option>
+          <option value="16">SU 16 (30 HGX + 2 UFM HA) → SLG 16</option>
+        </select>
+      </div>
+
+      <div class="control-group view-modes">
+        <span class="control-label">View Layer:</span>
+        <button class="btn active" type="button" id="btn-view-all" data-view="all">All Links</button>
+        <button class="btn" type="button" id="btn-view-ls" data-view="leaf-spine">Leaf ↔ Spine Focus</button>
+        <button class="btn" type="button" id="btn-view-hl" data-view="host-leaf">Host ↔ Leaf</button>
+        <button class="btn" type="button" id="btn-view-sc" data-view="spine-core">Spine ↔ Core</button>
+      </div>
+
+      <div class="status-text">
+        <span id="active-status-text">Viewing full 16 SU / 16 SLG fabric topology</span>
+      </div>
+    </div>
+
+    <div id="viewport-container">
+      <div id="tooltip" role="tooltip"></div>
+      <div id="toast" role="status">Copied Draw.io XML to Clipboard!</div>
+
+      <div id="info-drawer">
+        <h3>
+          <span id="drawer-title">16 SU / 16 SLG Unified Topology</span>
+          <span class="drawer-kicker">NCP RA Reference</span>
+        </h3>
+        <div class="drawer-metric"><span>Topology Standard:</span> <span>RA-11750-001 V4</span></div>
+        <div class="drawer-metric"><span>Scalable Units (SUs):</span> <span>16 SUs (SU 1..16)</span></div>
+        <div class="drawer-metric"><span>Switch-Leaf Groups:</span> <span>16 SLGs (SLG 1..16)</span></div>
+        <div class="drawer-metric"><span>Leaf-to-Spine Mesh:</span> <span class="accent">Foreground Highlighted (1.5px)</span></div>
+        <div class="drawer-metric"><span>Spine-to-Core Mesh:</span> <span class="accent">100% Active across All SUs</span></div>
+        <div class="drawer-metric"><span>Bisection Ratio:</span> <span class="ok">1:1 Non-Blocking</span></div>
+      </div>
+
+      <svg id="canvas" viewBox="0 0 3540 1480" aria-label="4K GPU fabric topology">
+        <g id="scene">
+          <rect class="tier-bg" x="30" y="20" width="3480" height="150" stroke="#6366F1" stroke-width="1.5" />
+          <text class="tier-header" x="50" y="44" fill="#A5B4FC">SUPER SPINE / CORE TIER — 16 CORE GROUPS (64x NVIDIA QUANTUM-2 MQM9790 • 4 CORE SWITCHES PER GROUP)</text>
+
+          <rect class="tier-bg" x="30" y="195" width="3480" height="640" stroke="#0284C7" stroke-dasharray="6,4" />
+          <text class="tier-header" x="50" y="222" fill="#38BDF8">4K RAIL SU GROUP — 16 SWITCH-LEAF GROUPS (SLG 1 TO 16 • 128 SPINES + 128 LEAF SWITCHES)</text>
+
+          <rect class="tier-bg" x="30" y="860" width="3480" height="580" stroke="#38BDF8" stroke-width="1.5" />
+          <text class="tier-header" x="50" y="885" fill="#93C5FD">COMPUTE HOST TIER — 16 SCALABLE UNITS (SU 1–16 = 511 HGX NODES + 2 UFM HA APPLIANCES)</text>
+
+          <g id="renderGroup"></g>
+        </g>
+      </svg>
+    </div>
+
+    <div class="legend-bar">
+      <span class="legend-title">Select SU (1..16):</span>
+      <button class="legend-pill active" type="button" id="su-btn-all" data-su="all">Show All</button>
+      <button class="legend-pill" type="button" id="su-btn-1" data-su="1">SU 1</button>
+      <button class="legend-pill" type="button" id="su-btn-2" data-su="2">SU 2</button>
+      <button class="legend-pill" type="button" id="su-btn-3" data-su="3">SU 3</button>
+      <button class="legend-pill" type="button" id="su-btn-4" data-su="4">SU 4</button>
+      <button class="legend-pill" type="button" id="su-btn-5" data-su="5">SU 5</button>
+      <button class="legend-pill" type="button" id="su-btn-6" data-su="6">SU 6</button>
+      <button class="legend-pill" type="button" id="su-btn-7" data-su="7">SU 7</button>
+      <button class="legend-pill" type="button" id="su-btn-8" data-su="8">SU 8</button>
+      <button class="legend-pill" type="button" id="su-btn-9" data-su="9">SU 9</button>
+      <button class="legend-pill" type="button" id="su-btn-10" data-su="10">SU 10</button>
+      <button class="legend-pill" type="button" id="su-btn-11" data-su="11">SU 11</button>
+      <button class="legend-pill" type="button" id="su-btn-12" data-su="12">SU 12</button>
+      <button class="legend-pill" type="button" id="su-btn-13" data-su="13">SU 13</button>
+      <button class="legend-pill" type="button" id="su-btn-14" data-su="14">SU 14</button>
+      <button class="legend-pill" type="button" id="su-btn-15" data-su="15">SU 15</button>
+      <button class="legend-pill" type="button" id="su-btn-16" data-su="16">SU 16</button>
+
+      <div class="pill-divider"></div>
+
+      <span class="legend-title">Filter Rail (1..8):</span>
+      <button class="legend-pill rail-pill-btn" type="button" id="rail-btn-1" data-rail="1"><span class="dot" style="background:#2563EB;"></span>Rail 1</button>
+      <button class="legend-pill rail-pill-btn" type="button" id="rail-btn-2" data-rail="2"><span class="dot" style="background:#DC2626;"></span>Rail 2</button>
+      <button class="legend-pill rail-pill-btn" type="button" id="rail-btn-3" data-rail="3"><span class="dot" style="background:#16A34A;"></span>Rail 3</button>
+      <button class="legend-pill rail-pill-btn" type="button" id="rail-btn-4" data-rail="4"><span class="dot" style="background:#DB2777;"></span>Rail 4</button>
+      <button class="legend-pill rail-pill-btn" type="button" id="rail-btn-5" data-rail="5"><span class="dot" style="background:#854D0E;"></span>Rail 5</button>
+      <button class="legend-pill rail-pill-btn" type="button" id="rail-btn-6" data-rail="6"><span class="dot" style="background:#0284C7;"></span>Rail 6</button>
+      <button class="legend-pill rail-pill-btn" type="button" id="rail-btn-7" data-rail="7"><span class="dot" style="background:#7C3AED;"></span>Rail 7</button>
+      <button class="legend-pill rail-pill-btn" type="button" id="rail-btn-8" data-rail="8"><span class="dot" style="background:#EA580C;"></span>Rail 8</button>
+    </div>
+
+    <script type="module" src="/src/main.ts"></script>
+  </body>
+</html>
