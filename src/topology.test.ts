@@ -9,6 +9,7 @@ import {
   shouldDrawSpineCoreLink,
   spineCoreEdgeCount,
   spinePlaneForCoreGroup,
+  coreSwitchIndexForSlg,
 } from "./topology.ts";
 
 describe("8 × 8 core layout (Figure 13)", () => {
@@ -50,6 +51,14 @@ describe("16 × 4 core layout", () => {
   it("does not draw a full mesh", () => {
     expect(shouldDrawSpineCoreLink(1, 2, "16x4")).toBe(false);
     expect(shouldDrawSpineCoreLink(1, 16, "16x4")).toBe(false);
+  });
+
+  it("spreads SLG uplinks across switches inside a group", () => {
+    expect(coreSwitchIndexForSlg(1, 4)).toBe(1);
+    expect(coreSwitchIndexForSlg(4, 4)).toBe(4);
+    expect(coreSwitchIndexForSlg(5, 4)).toBe(1);
+    expect(coreSwitchIndexForSlg(8, 8)).toBe(8);
+    expect(coreSwitchIndexForSlg(9, 8)).toBe(1);
   });
 
   it("uses 16 groups of 4 switches and 256 plane-aligned uplinks", () => {

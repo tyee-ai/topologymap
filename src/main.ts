@@ -1,6 +1,6 @@
 import "./style.css";
 import { isCoreLayoutId, type CoreLayoutId } from "./constants.ts";
-import { layoutFromUrl, updateCoreChrome, writeLayoutToUrl } from "./chrome.ts";
+import { coreSwitchesFromUrl, layoutFromUrl, updateCoreChrome, writeViewToUrl } from "./chrome.ts";
 import { copyDrawIO, downloadDrawIO } from "./drawio.ts";
 import { buildFabricMarkup } from "./fabric.ts";
 import { filterRail, onSelectSU, setViewMode } from "./filters.ts";
@@ -24,7 +24,14 @@ function rebuildFabric(): void {
 function setCoreLayout(layout: CoreLayoutId): void {
   if (state.coreLayout === layout) return;
   state.coreLayout = layout;
-  writeLayoutToUrl(layout);
+  writeViewToUrl();
+  rebuildFabric();
+}
+
+function setShowCoreSwitches(show: boolean): void {
+  if (state.showCoreSwitches === show) return;
+  state.showCoreSwitches = show;
+  writeViewToUrl();
   rebuildFabric();
 }
 
@@ -72,10 +79,18 @@ function bindChrome(): void {
       if (layout && isCoreLayoutId(layout)) setCoreLayout(layout);
     });
   });
+
+  document.querySelectorAll<HTMLButtonElement>("[data-core-detail]").forEach((button) => {
+    button.addEventListener("click", () => {
+      setShowCoreSwitches(button.dataset.coreDetail === "switches");
+    });
+  });
 }
 
 const fromUrl = layoutFromUrl();
 if (fromUrl) state.coreLayout = fromUrl;
+const switchesFromUrl = coreSwitchesFromUrl();
+if (switchesFromUrl !== null) state.showCoreSwitches = switchesFromUrl;
 
 buildFabricMarkup();
 updateCoreChrome();

@@ -16,11 +16,18 @@ export function updateCoreChrome(): void {
 
   const header = document.getElementById("core-tier-header");
   if (header) {
-    header.textContent = `SUPER SPINE / CORE TIER — ${spec.groupCount} CORE GROUPS (64x NVIDIA QUANTUM-2 MQM9790 • ${spec.switchesPerGroup} CORE SWITCHES PER GROUP)`;
+    const detail = state.showCoreSwitches
+      ? `${spec.switchesPerGroup} SWITCHES DRAWN PER GROUP`
+      : `${spec.switchesPerGroup} CORE SWITCHES PER GROUP`;
+    header.textContent = `SUPER SPINE / CORE TIER — ${spec.groupCount} CORE GROUPS (64x NVIDIA QUANTUM-2 MQM9790 • ${detail})`;
   }
 
   const drawerLayout = document.getElementById("drawer-core-layout");
-  if (drawerLayout) drawerLayout.textContent = `${spec.label} (${TOTAL_CORE_SWITCHES} MQM9790)`;
+  if (drawerLayout) {
+    drawerLayout.textContent = state.showCoreSwitches
+      ? `${spec.label} · all ${spec.switchesPerGroup} switches shown`
+      : `${spec.label} (${TOTAL_CORE_SWITCHES} MQM9790)`;
+  }
 
   const drawerSc = document.getElementById("drawer-spine-core");
   if (drawerSc) {
@@ -33,6 +40,11 @@ export function updateCoreChrome(): void {
   document.querySelectorAll<HTMLButtonElement>("[data-core-layout]").forEach((button) => {
     button.classList.toggle("active", button.dataset.coreLayout === spec.id);
   });
+
+  document.querySelectorAll<HTMLButtonElement>("[data-core-detail]").forEach((button) => {
+    const expanded = button.dataset.coreDetail === "switches";
+    button.classList.toggle("active", expanded === state.showCoreSwitches);
+  });
 }
 
 export function layoutFromUrl(): CoreLayoutId | null {
@@ -41,8 +53,17 @@ export function layoutFromUrl(): CoreLayoutId | null {
   return null;
 }
 
-export function writeLayoutToUrl(layout: CoreLayoutId): void {
+export function coreSwitchesFromUrl(): boolean | null {
+  const param = new URLSearchParams(window.location.search).get("coreSwitches");
+  if (param === "1" || param === "true") return true;
+  if (param === "0" || param === "false") return false;
+  return null;
+}
+
+export function writeViewToUrl(): void {
   const url = new URL(window.location.href);
-  url.searchParams.set("cores", layout);
+  url.searchParams.set("cores", state.coreLayout);
+  if (state.showCoreSwitches) url.searchParams.set("coreSwitches", "1");
+  else url.searchParams.delete("coreSwitches");
   window.history.replaceState({}, "", url);
 }

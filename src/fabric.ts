@@ -6,13 +6,20 @@ import {
   coreGroupUplinkPorts,
   coreGroupsForSpine,
   coreLayoutSpec,
+  coreSwitchIndexForSlg,
   linksPerSpineToCoreGroup,
   spinePlaneForCoreGroup,
 } from "./topology.ts";
 
 type Point = { x: number; y: number };
+type CoreAnchor = { group: Point; switches: Point[] };
 type SpinePos = Point & { slgNum: number; spineNum: number };
 type LeafPos = Point & { slgNum: number; leafNum: number; connectedSu: number };
+
+function coreLinkTarget(anchor: CoreAnchor, slgNum: number): Point {
+  if (!state.showCoreSwitches || anchor.switches.length === 0) return anchor.group;
+  return anchor.switches[coreSwitchIndexForSlg(slgNum, anchor.switches.length) - 1] ?? anchor.group;
+}
 
 function range(start: number, end: number): number[] {
   const values: number[] = [];
@@ -32,7 +39,7 @@ export function buildFabricMarkup(): void {
 
   const layout = state.coreLayout;
   const spec = coreLayoutSpec(layout);
-  const corePositions: Point[] = [];
+  const coreAnchors: CoreAnchor[] = [];
   const cgGap = 15;
   const cgStartX = 50;
   const cgY = 55;
@@ -40,19 +47,47 @@ export function buildFabricMarkup(): void {
   const cgWidth = (fabricSpan - (spec.groupCount - 1) * cgGap) / spec.groupCount;
   const linksEach = linksPerSpineToCoreGroup(layout);
   const uplinkPorts = coreGroupUplinkPorts(layout);
+  const showSwitches = state.showCoreSwitches;
+  const innerPad = 8;
+  const tileGap = 4;
+  const tileCount = spec.switchesPerGroup;
+  const tileW = (cgWidth - innerPad * 2 - (tileCount - 1) * tileGap) / tileCount;
+  const tileH = 48;
+  const tileY = cgY + 40;
 
   for (let c = 0; c < spec.groupCount; c += 1) {
     const cx = cgStartX + c * (cgWidth + cgGap);
-    corePositions.push({ x: cx + cgWidth / 2, y: cgY + 95 });
     const spinePlane = spinePlaneForCoreGroup(c + 1, layout);
+    const switches: Point[] = [];
+    let tilesHtml = "";
+
+    if (showSwitches) {
+      for (let i = 0; i < tileCount; i += 1) {
+        const tileX = cx + innerPad + i * (tileW + tileGap);
+        switches.push({ x: tileX + tileW / 2, y: tileY + tileH });
+        const portsEach = Math.round(uplinkPorts / tileCount);
+        tilesHtml += `
+          <g class="core-switch core-switch-g${c + 1}-c${i + 1}" data-tip="<b>Core Group ${c + 1} · Core ${i + 1}</b><br>• NVIDIA Quantum-2 MQM9790 (64x 400G)<br>• Plane: Spine ${spinePlane}s across 16 SLGs<br>• Share of group uplinks: ~${portsEach}x 400G">
+            <rect class="switch-box" x="${tileX}" y="${tileY}" width="${tileW}" height="${tileH}" rx="4" fill="#0F172A" stroke="#818CF8" stroke-width="1.1" />
+            <text x="${tileX + tileW / 2}" y="${tileY + 16}" font-size="${tileW < 36 ? 7 : 8}" font-weight="bold" fill="#E0E7FF" text-anchor="middle">C${i + 1}</text>
+            <text x="${tileX + tileW / 2}" y="${tileY + 29}" font-size="${tileW < 36 ? 6 : 7}" fill="#A5B4FC" text-anchor="middle">MQM9790</text>
+            <text x="${tileX + tileW / 2}" y="${tileY + 41}" font-size="6" fill="#38BDF8" text-anchor="middle">64p</text>
+          </g>`;
+      }
+    } else {
+      tilesHtml = `
+        <rect x="${cx + 10}" y="${cgY + 48}" width="${cgWidth - 20}" height="35" rx="4" fill="#0F172A" stroke="#4338CA" />
+        <text x="${cx + cgWidth / 2}" y="${cgY + 63}" font-size="9" fill="#E0E7FF" text-anchor="middle">Core 1..${spec.switchesPerGroup} (${spec.switchesPerGroup}x MQM9790)</text>
+        <text x="${cx + cgWidth / 2}" y="${cgY + 76}" font-size="8" fill="#38BDF8" text-anchor="middle">${uplinkPorts}x 400G Links</text>`;
+    }
+
+    coreAnchors.push({ group: { x: cx + cgWidth / 2, y: cgY + 95 }, switches });
     switchBoxesHtml += `
       <g class="switch-box core-box core-box-${c + 1}" data-tip="<b>Core Group ${c + 1}</b><br>• Figure 13: <b>To all Spine ${spinePlane}s</b> (one spine in every SLG)<br>• Layout: ${spec.label} — Core 1..${spec.switchesPerGroup} (${spec.switchesPerGroup}x MQM9790)<br>• Uplinks: ${uplinkPorts}x 400G (${SLG_COUNT} SLGs × ${linksEach} links from Spine ${spinePlane})">
         <rect x="${cx}" y="${cgY}" width="${cgWidth}" height="95" rx="6" fill="#1E1B4B" stroke="#818CF8" stroke-width="1.4" />
         <text x="${cx + cgWidth / 2}" y="${cgY + 22}" font-size="11.5" font-weight="bold" fill="#ffffff" text-anchor="middle">Core Group ${c + 1}</text>
         <text x="${cx + cgWidth / 2}" y="${cgY + 38}" font-size="9.5" fill="#A5B4FC" text-anchor="middle">To all Spine ${spinePlane}s (16 SLGs)</text>
-        <rect x="${cx + 10}" y="${cgY + 48}" width="${cgWidth - 20}" height="35" rx="4" fill="#0F172A" stroke="#4338CA" />
-        <text x="${cx + cgWidth / 2}" y="${cgY + 63}" font-size="9" fill="#E0E7FF" text-anchor="middle">Core 1..${spec.switchesPerGroup} (${spec.switchesPerGroup}x MQM9790)</text>
-        <text x="${cx + cgWidth / 2}" y="${cgY + 76}" font-size="8" fill="#38BDF8" text-anchor="middle">${uplinkPorts}x 400G Links</text>
+        ${tilesHtml}
       </g>`;
   }
 
@@ -105,9 +140,10 @@ export function buildFabricMarkup(): void {
         </g>`;
 
       for (const coreGroupNum of coreTargets) {
-        const cg = corePositions[coreGroupNum - 1];
-        if (!cg) continue;
-        spineCoreLinks += `<line x1="${spx + 21}" y1="${spy}" x2="${cg.x}" y2="${cg.y}" stroke="${color}" stroke-width="1.2" class="fabric-link spine-core-link rail-link-${railIdx + 1} slg-link-${slgNum} core-link-${coreGroupNum} spine-plane-${spineNum}" />`;
+        const anchor = coreAnchors[coreGroupNum - 1];
+        if (!anchor) continue;
+        const target = coreLinkTarget(anchor, slgNum);
+        spineCoreLinks += `<line x1="${spx + 21}" y1="${spy}" x2="${target.x}" y2="${target.y}" stroke="${color}" stroke-width="1.2" class="fabric-link spine-core-link rail-link-${railIdx + 1} slg-link-${slgNum} core-link-${coreGroupNum} spine-plane-${spineNum}" />`;
       }
     }
 

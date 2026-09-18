@@ -64,3 +64,8 @@ export function coreGroupUplinkPorts(layout: CoreLayoutId): number {
 export function coreLayoutSpec(layout: CoreLayoutId) {
   return CORE_LAYOUTS[layout];
 }
+
+/** Spread SLG uplinks across the switches inside a core group. */
+export function coreSwitchIndexForSlg(slgNum: number, switchesPerGroup: number): number {
+  return ((slgNum - 1) % switchesPerGroup) + 1;
+}

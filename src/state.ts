@@ -8,4 +8,5 @@ export const state = {
   selectedRail: "all" as Selection,
   viewMode: "all" as ViewMode,
   coreLayout: DEFAULT_CORE_LAYOUT as CoreLayoutId,
+  showCoreSwitches: false,
 };
