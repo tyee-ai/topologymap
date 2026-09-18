@@ -98,7 +98,7 @@ export function onSelectSU(suVal: Selection | string): void {
 
   const targetSlgs = normalized <= 8 ? "SLGs 1..8" : "SLGs 9..16";
   setStatus(
-    `Tracing <b style="color:#6EE7B7;">SU ${normalized}</b>: Hosts → Leaf-SU${normalized} in ${targetSlgs} → Spines 1..8 → Active Core Mesh`,
+    `Tracing <b style="color:#6EE7B7;">SU ${normalized}</b>: Hosts → Leaf-SU${normalized} in ${targetSlgs} → Spines 1..8 → Core Groups N &amp; N+8`,
   );
 
   document.querySelectorAll<HTMLElement>(".su-box").forEach((box, idx) => {

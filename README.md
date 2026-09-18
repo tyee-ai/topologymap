@@ -2,6 +2,8 @@
 
 Interactive explorer for the NVIDIA NCP RA-11750-001 V4 4,096-GPU InfiniBand fabric: 16 scalable units, 16 switch-leaf groups, and 16 core groups.
 
+Spine-to-core wiring follows Figure 13 (2K Rail SU group): **Core Group N connects to all Spine Ns**, not a full mesh. The 4K map uses two core groups per spine plane (N and N+8) so all 16 groups are used. The reference figure is at `prototypes/figure-13-2k-rail-su-group.png`.
+
 Pan and zoom the three-tier map, highlight a scalable unit to trace host → leaf → spine → core paths, filter by rail (SP1–SP8), and toggle host-leaf, leaf-spine, or spine-core link layers. Export a Draw.io starter diagram from the toolbar.
 
 The original standalone HTML prototype is versioned at `prototypes/source-topology-map.html`.

@@ -7,6 +7,7 @@ import {
   SWITCHES_PER_SLG,
 } from "./constants.ts";
 import { onSelectSU } from "./filters.ts";
+import { coreGroupsForSpine, spinePlaneForCoreGroup } from "./topology.ts";
 
 type Point = { x: number; y: number };
 type SpinePos = Point & { slgNum: number; spineNum: number };
@@ -37,11 +38,12 @@ export function buildFabricMarkup(): void {
   for (let c = 0; c < CORE_GROUP_COUNT; c += 1) {
     const cx = cgStartX + c * (cgWidth + cgGap);
     corePositions.push({ x: cx + cgWidth / 2, y: cgY + 95 });
+    const spinePlane = spinePlaneForCoreGroup(c + 1);
     switchBoxesHtml += `
-      <g class="switch-box core-box core-box-${c + 1}" data-tip="<b>Core Group ${c + 1}</b><br>• Switches: Core 1..4 (4x MQM9790)<br>• Cages: 32x OSFP per switch (64x 400G ports)<br>• Total Ports: 256x 400G NDR ports per Core Group">
+      <g class="switch-box core-box core-box-${c + 1}" data-tip="<b>Core Group ${c + 1}</b><br>• Figure 13: <b>To all Spine ${spinePlane}s</b> (one spine in every SLG)<br>• Switches: Core 1..4 (4x MQM9790)<br>• Cages: 32x OSFP per switch (64x 400G ports)<br>• Total Ports: 256x 400G NDR (16 SLGs × 16 links from Spine ${spinePlane})">
         <rect x="${cx}" y="${cgY}" width="${cgWidth}" height="95" rx="6" fill="#1E1B4B" stroke="#818CF8" stroke-width="1.4" />
         <text x="${cx + cgWidth / 2}" y="${cgY + 22}" font-size="11.5" font-weight="bold" fill="#ffffff" text-anchor="middle">Core Group ${c + 1}</text>
-        <text x="${cx + cgWidth / 2}" y="${cgY + 38}" font-size="9.5" fill="#A5B4FC" text-anchor="middle">(To Spines across all 16 SLGs)</text>
+        <text x="${cx + cgWidth / 2}" y="${cgY + 38}" font-size="9.5" fill="#A5B4FC" text-anchor="middle">To all Spine ${spinePlane}s (16 SLGs)</text>
         <rect x="${cx + 10}" y="${cgY + 48}" width="${cgWidth - 20}" height="35" rx="4" fill="#0F172A" stroke="#4338CA" />
         <text x="${cx + cgWidth / 2}" y="${cgY + 63}" font-size="9" fill="#E0E7FF" text-anchor="middle">Core 1..4 (4x MQM9790)</text>
         <text x="${cx + cgWidth / 2}" y="${cgY + 76}" font-size="8" fill="#38BDF8" text-anchor="middle">256x 400G Links (128 OSFP)</text>
@@ -78,11 +80,13 @@ export function buildFabricMarkup(): void {
       const spy = slgY + 50 + row * 110;
       spinePositions.push({ x: spx + 21, y: spy + 42, slgNum, spineNum: s + 1 });
 
+      const spineNum = s + 1;
+      const [coreA, coreB] = coreGroupsForSpine(spineNum);
       switchBoxesHtml += `
-        <g class="spine-group spine-slg${slgNum}-s${s + 1}" data-tip="<b>SLG ${slgNum} Spine ${s + 1}</b><br>• Downlinks: 32x 400G downlinks to 8 Leafs in SLG ${slgNum}<br>• Uplinks: 32x 400G uplinks fanning out across ALL 16 Core Groups">
+        <g class="spine-group spine-slg${slgNum}-s${spineNum}" data-tip="<b>SLG ${slgNum} Spine ${spineNum}</b><br>• Downlinks: 32x 400G downlinks to 8 Leafs in SLG ${slgNum}<br>• Uplinks: 32x 400G to <b>Core Group ${coreA}</b> and <b>Core Group ${coreB}</b> (16 links each; Fig. 13 plane)">
           <rect class="switch-box spine-box" x="${spx}" y="${spy}" width="42" height="90" rx="4" fill="#0F2942" stroke="${color}" stroke-width="1.2" />
           <text x="${spx + 21}" y="${spy + 15}" font-size="8" font-weight="bold" fill="#fff" text-anchor="middle">Spine</text>
-          <text x="${spx + 21}" y="${spy + 28}" font-size="9" font-weight="bold" fill="${color}" text-anchor="middle">${s + 1}</text>
+          <text x="${spx + 21}" y="${spy + 28}" font-size="9" font-weight="bold" fill="${color}" text-anchor="middle">${spineNum}</text>
           <line x1="${spx + 3}" y1="${spy + 33}" x2="${spx + 39}" y2="${spy + 33}" stroke="#1e293b" />
           <text x="${spx + 21}" y="${spy + 45}" font-size="7" fill="#38BDF8" text-anchor="middle">32 Up</text>
           <line x1="${spx + 3}" y1="${spy + 51}" x2="${spx + 39}" y2="${spy + 51}" stroke="#1e293b" />
@@ -90,9 +94,9 @@ export function buildFabricMarkup(): void {
           <text x="${spx + 21}" y="${spy + 78}" font-size="6" fill="#FBBF24" text-anchor="middle">4x/Leaf</text>
         </g>`;
 
-      for (let c = 0; c < CORE_GROUP_COUNT; c += 1) {
-        const cg = corePositions[c];
-        spineCoreLinks += `<line x1="${spx + 21}" y1="${spy}" x2="${cg.x}" y2="${cg.y}" stroke="${color}" stroke-width="0.8" class="fabric-link spine-core-link rail-link-${railIdx + 1} slg-link-${slgNum} core-link-${c + 1}" />`;
+      for (const coreGroupNum of coreGroupsForSpine(spineNum)) {
+        const cg = corePositions[coreGroupNum - 1];
+        spineCoreLinks += `<line x1="${spx + 21}" y1="${spy}" x2="${cg.x}" y2="${cg.y}" stroke="${color}" stroke-width="1.2" class="fabric-link spine-core-link rail-link-${railIdx + 1} slg-link-${slgNum} core-link-${coreGroupNum} spine-plane-${spineNum}" />`;
       }
     }
 
