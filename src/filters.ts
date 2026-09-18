@@ -98,7 +98,7 @@ export function onSelectSU(suVal: Selection | string): void {
 
   const targetSlgs = normalized <= 8 ? "SLGs 1..8" : "SLGs 9..16";
   setStatus(
-    `Tracing <b style="color:#6EE7B7;">SU ${normalized}</b>: Hosts → Leaf-SU${normalized} in ${targetSlgs} → Spines 1..8 → Core Groups N &amp; N+8`,
+    `Tracing <b style="color:#6EE7B7;">SU ${normalized}</b>: Hosts → Leaf-SU${normalized} in ${targetSlgs} → Spines 1..8 → Core Group N${state.coreLayout === "16x4" ? " &amp; N+8" : ""}`,
   );
 
   document.querySelectorAll<HTMLElement>(".su-box").forEach((box, idx) => {
@@ -166,7 +166,7 @@ function applyViewMode(mode: ViewMode): void {
 
 export function setViewMode(mode: ViewMode): void {
   state.viewMode = mode;
-  document.querySelectorAll(".control-strip .btn").forEach((btn) => btn.classList.remove("active"));
+  document.querySelectorAll("[data-view]").forEach((btn) => btn.classList.remove("active"));
   const activeId =
     mode === "all"
       ? "btn-view-all"

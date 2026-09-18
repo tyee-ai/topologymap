@@ -1,48 +1,62 @@
 import { describe, expect, it } from "vitest";
-import { CORE_GROUP_COUNT, SLG_COUNT } from "./constants.ts";
+import { SLG_COUNT, TOTAL_CORE_SWITCHES } from "./constants.ts";
 import {
-  SPINE_CORE_EDGE_COUNT,
   SPINE_PLANES,
   buildSpineCoreEdges,
+  coreGroupUplinkPorts,
   coreGroupsForSpine,
+  coreLayoutSpec,
   shouldDrawSpineCoreLink,
+  spineCoreEdgeCount,
   spinePlaneForCoreGroup,
 } from "./topology.ts";
 
-describe("Figure 13 SLG → core mapping", () => {
-  it("Core Group N connects only to Spine N (and the 4K paired group N+8)", () => {
+describe("8 × 8 core layout (Figure 13)", () => {
+  it("maps Core Group N only to Spine N", () => {
     for (let spine = 1; spine <= SPINE_PLANES; spine += 1) {
-      expect(coreGroupsForSpine(spine)).toEqual([spine, spine + SPINE_PLANES]);
-      expect(shouldDrawSpineCoreLink(spine, spine)).toBe(true);
-      expect(shouldDrawSpineCoreLink(spine, spine + SPINE_PLANES)).toBe(true);
+      expect(coreGroupsForSpine(spine, "8x8")).toEqual([spine]);
+      expect(shouldDrawSpineCoreLink(spine, spine, "8x8")).toBe(true);
+      expect(shouldDrawSpineCoreLink(spine, spine === 8 ? 1 : spine + 1, "8x8")).toBe(false);
     }
   });
 
-  it("does not draw a full spine–core mesh", () => {
-    expect(shouldDrawSpineCoreLink(1, 2)).toBe(false);
-    expect(shouldDrawSpineCoreLink(2, 1)).toBe(false);
-    expect(shouldDrawSpineCoreLink(8, 1)).toBe(false);
-    expect(shouldDrawSpineCoreLink(1, 16)).toBe(false);
+  it("uses 8 groups of 8 switches and 128 plane-aligned uplinks", () => {
+    expect(coreLayoutSpec("8x8").groupCount * coreLayoutSpec("8x8").switchesPerGroup).toBe(
+      TOTAL_CORE_SWITCHES,
+    );
+    expect(buildSpineCoreEdges("8x8")).toHaveLength(spineCoreEdgeCount("8x8"));
+    expect(spineCoreEdgeCount("8x8")).toBe(128);
+    expect(coreGroupUplinkPorts("8x8")).toBe(512);
   });
 
-  it("labels Core Group 1/9 as Spine 1s and Core Group 8/16 as Spine 8s", () => {
-    expect(spinePlaneForCoreGroup(1)).toBe(1);
-    expect(spinePlaneForCoreGroup(9)).toBe(1);
-    expect(spinePlaneForCoreGroup(8)).toBe(8);
-    expect(spinePlaneForCoreGroup(16)).toBe(8);
-  });
-
-  it("connects each core group to Spine N in every SLG", () => {
-    const edges = buildSpineCoreEdges();
-    const cg1 = edges.filter((e) => e.coreGroupNum === 1);
+  it("connects Core Group 1 to Spine 1 in every SLG", () => {
+    const cg1 = buildSpineCoreEdges("8x8").filter((e) => e.coreGroupNum === 1);
     expect(cg1).toHaveLength(SLG_COUNT);
     expect(cg1.every((e) => e.spineNum === 1)).toBe(true);
-    expect(new Set(cg1.map((e) => e.slgNum)).size).toBe(SLG_COUNT);
+  });
+});
+
+describe("16 × 4 core layout", () => {
+  it("pairs Core Group N and N+8 on the same spine plane", () => {
+    for (let spine = 1; spine <= SPINE_PLANES; spine += 1) {
+      expect(coreGroupsForSpine(spine, "16x4")).toEqual([spine, spine + SPINE_PLANES]);
+    }
+    expect(spinePlaneForCoreGroup(1, "16x4")).toBe(1);
+    expect(spinePlaneForCoreGroup(9, "16x4")).toBe(1);
+    expect(spinePlaneForCoreGroup(8, "16x4")).toBe(8);
+    expect(spinePlaneForCoreGroup(16, "16x4")).toBe(8);
   });
 
-  it("keeps 4K port math: 256 plane-aligned uplinks, not 2048 full-mesh links", () => {
-    expect(CORE_GROUP_COUNT).toBe(16);
-    expect(buildSpineCoreEdges()).toHaveLength(SPINE_CORE_EDGE_COUNT);
-    expect(SPINE_CORE_EDGE_COUNT).toBe(256);
+  it("does not draw a full mesh", () => {
+    expect(shouldDrawSpineCoreLink(1, 2, "16x4")).toBe(false);
+    expect(shouldDrawSpineCoreLink(1, 16, "16x4")).toBe(false);
+  });
+
+  it("uses 16 groups of 4 switches and 256 plane-aligned uplinks", () => {
+    expect(coreLayoutSpec("16x4").groupCount * coreLayoutSpec("16x4").switchesPerGroup).toBe(
+      TOTAL_CORE_SWITCHES,
+    );
+    expect(spineCoreEdgeCount("16x4")).toBe(256);
+    expect(coreGroupUplinkPorts("16x4")).toBe(256);
   });
 });

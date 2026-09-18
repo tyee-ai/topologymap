@@ -10,7 +10,7 @@
     <header>
       <div class="title-area">
         <h1>4,096 GPU Fabric Topology <span class="badge">NVIDIA NCP RA-11750-001 V4</span></h1>
-        <div class="subtitle">511 HGX + 2 UFM HA (16 SUs) → 16 SLGs (128 Leaf / 128 Spine) → 16 Core Groups (64 Core MQM9790)</div>
+        <div class="subtitle" id="header-subtitle">511 HGX + 2 UFM HA (16 SUs) → 16 SLGs (128 Leaf / 128 Spine) → 16 Core Groups (64 Core MQM9790)</div>
       </div>
       <div class="stats-bar">
         <div>Compute: <span>4,088 GPUs (511 HGX)</span></div>
@@ -19,7 +19,7 @@
         <div>SLGs: <span>16 (SLG 1..16)</span></div>
         <div>Leafs: <span>128 (16×8)</span></div>
         <div>Spines: <span>128 (16×8)</span></div>
-        <div>Cores: <span>64 (16×4)</span></div>
+        <div>Cores: <span id="core-stat">64 (16×4)</span></div>
       </div>
       <div class="toolbar">
         <button class="btn primary" type="button" data-action="copy-drawio">Copy Draw.io XML</button>
@@ -54,6 +54,12 @@
         </select>
       </div>
 
+      <div class="control-group">
+        <span class="control-label">Core Groups:</span>
+        <button class="btn" type="button" data-core-layout="8x8">8 × 8</button>
+        <button class="btn active" type="button" data-core-layout="16x4">16 × 4</button>
+      </div>
+
       <div class="control-group view-modes">
         <span class="control-label">View Layer:</span>
         <button class="btn active" type="button" id="btn-view-all" data-view="all">All Links</button>
@@ -80,14 +86,15 @@
         <div class="drawer-metric"><span>Scalable Units (SUs):</span> <span>16 SUs (SU 1..16)</span></div>
         <div class="drawer-metric"><span>Switch-Leaf Groups:</span> <span>16 SLGs (SLG 1..16)</span></div>
         <div class="drawer-metric"><span>Leaf-to-Spine Mesh:</span> <span class="accent">Foreground Highlighted (1.5px)</span></div>
-        <div class="drawer-metric"><span>Spine-to-Core:</span> <span class="accent">Core Group N → all Spine Ns (Fig. 13)</span></div>
+        <div class="drawer-metric"><span>Core Groups:</span> <span id="drawer-core-layout">16 × 4 (64 MQM9790)</span></div>
+        <div class="drawer-metric"><span>Spine-to-Core:</span> <span class="accent" id="drawer-spine-core">Core Group N → all Spine Ns (Fig. 13)</span></div>
         <div class="drawer-metric"><span>Bisection Ratio:</span> <span class="ok">1:1 Non-Blocking</span></div>
       </div>
 
       <svg id="canvas" viewBox="0 0 3540 1480" aria-label="4K GPU fabric topology">
         <g id="scene">
           <rect class="tier-bg" x="30" y="20" width="3480" height="150" stroke="#6366F1" stroke-width="1.5" />
-          <text class="tier-header" x="50" y="44" fill="#A5B4FC">SUPER SPINE / CORE TIER — 16 CORE GROUPS (64x NVIDIA QUANTUM-2 MQM9790 • 4 CORE SWITCHES PER GROUP)</text>
+          <text class="tier-header" id="core-tier-header" x="50" y="44" fill="#A5B4FC">SUPER SPINE / CORE TIER — 16 CORE GROUPS (64x NVIDIA QUANTUM-2 MQM9790 • 4 CORE SWITCHES PER GROUP)</text>
 
           <rect class="tier-bg" x="30" y="195" width="3480" height="640" stroke="#0284C7" stroke-dasharray="6,4" />
           <text class="tier-header" x="50" y="222" fill="#38BDF8">4K RAIL SU GROUP — 16 SWITCH-LEAF GROUPS (SLG 1 TO 16 • 128 SPINES + 128 LEAF SWITCHES)</text>

@@ -1,9 +1,32 @@
 import "./style.css";
+import { isCoreLayoutId, type CoreLayoutId } from "./constants.ts";
+import { layoutFromUrl, updateCoreChrome, writeLayoutToUrl } from "./chrome.ts";
 import { copyDrawIO, downloadDrawIO } from "./drawio.ts";
 import { buildFabricMarkup } from "./fabric.ts";
 import { filterRail, onSelectSU, setViewMode } from "./filters.ts";
 import { bindPanZoom, resetZoom, setTransform, zoomIn, zoomOut } from "./panzoom.ts";
-import type { ViewMode } from "./state.ts";
+import { state, type ViewMode } from "./state.ts";
+
+function rebuildFabric(): void {
+  buildFabricMarkup();
+  updateCoreChrome();
+  if (state.selectedSU !== "all") {
+    onSelectSU(state.selectedSU);
+    return;
+  }
+  if (typeof state.selectedRail === "number") {
+    filterRail(state.selectedRail);
+    return;
+  }
+  setViewMode(state.viewMode);
+}
+
+function setCoreLayout(layout: CoreLayoutId): void {
+  if (state.coreLayout === layout) return;
+  state.coreLayout = layout;
+  writeLayoutToUrl(layout);
+  rebuildFabric();
+}
 
 function bindChrome(): void {
   document.querySelectorAll<HTMLButtonElement>("[data-action]").forEach((button) => {
@@ -42,9 +65,20 @@ function bindChrome(): void {
       if (Number.isFinite(rail)) filterRail(rail);
     });
   });
+
+  document.querySelectorAll<HTMLButtonElement>("[data-core-layout]").forEach((button) => {
+    button.addEventListener("click", () => {
+      const layout = button.dataset.coreLayout;
+      if (layout && isCoreLayoutId(layout)) setCoreLayout(layout);
+    });
+  });
 }
 
+const fromUrl = layoutFromUrl();
+if (fromUrl) state.coreLayout = fromUrl;
+
 buildFabricMarkup();
+updateCoreChrome();
 bindPanZoom();
 bindChrome();
 setTransform();
