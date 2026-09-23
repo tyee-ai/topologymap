@@ -17,7 +17,7 @@ npm install
 npm run dev
 ```
 
-The Vite app listens on [https://127.0.0.1:43147](https://127.0.0.1:43147) (self-signed; accept the browser warning).
+The Vite app listens on [http://127.0.0.1:43147](http://127.0.0.1:43147). Docker/nginx still serves HTTPS (see below).
 
 Production build (same port):
 
