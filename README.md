@@ -45,7 +45,7 @@ docker run --rm -p 43147:443 -p 43146:80 gpu-fabric-topology:local
 
 ## Run on 192.168.1.247
 
-`.env.remote` publishes HTTPS on **443** and HTTP **80** (redirect) at **192.168.1.247**. Docker must be installed on that host.
+`.env.remote` publishes HTTPS on **43147** and HTTP **43146** (redirects to HTTPS) at **192.168.1.247**. It does not bind 80 or 443. Docker must be installed on that host.
 
 **On the host itself** (clone or copy this repo there):
 

@@ -2,7 +2,14 @@
 set -eu
 
 CERT_DIR="${CERT_DIR:-/etc/nginx/certs}"
+HTTPS_PUBLIC_PORT="${HTTPS_PUBLIC_PORT:-43147}"
 mkdir -p "$CERT_DIR"
+
+template="/etc/nginx/templates/default.conf.template"
+if [ -f "$template" ]; then
+  sed "s/__HTTPS_PUBLIC_PORT__/${HTTPS_PUBLIC_PORT}/g" "$template" \
+    > /etc/nginx/conf.d/default.conf
+fi
 
 if [ ! -f "$CERT_DIR/tls.crt" ] || [ ! -f "$CERT_DIR/tls.key" ]; then
   echo "Generating self-signed TLS cert (SANs: 192.168.1.247, 127.0.0.1, localhost)"
