@@ -17,7 +17,7 @@ npm install
 npm run dev
 ```
 
-The Vite app listens on [http://127.0.0.1:43147](http://127.0.0.1:43147).
+The Vite app listens on [https://127.0.0.1:43147](https://127.0.0.1:43147) (self-signed; accept the browser warning).
 
 Production build (same port):
 
@@ -32,20 +32,20 @@ npm run preview
 docker compose up --build
 ```
 
-The container serves the production build with nginx on host port **43147** (`0.0.0.0:43147:80`). Open [http://127.0.0.1:43147](http://127.0.0.1:43147).
+The container serves HTTPS (nginx) on host port **43147** (`0.0.0.0:43147:443`) and redirects HTTP **43146** → HTTPS. Open [https://127.0.0.1:43147](https://127.0.0.1:43147). A self-signed cert is created on first start (SAN includes `192.168.1.247`, `127.0.0.1`, `localhost`). Accept the browser warning, or mount your own `tls.crt` / `tls.key` into `/etc/nginx/certs`.
 
 Equivalent without Compose:
 
 ```bash
 docker build -t gpu-fabric-topology:local .
-docker run --rm -p 43147:80 gpu-fabric-topology:local
+docker run --rm -p 43147:443 -p 43146:80 gpu-fabric-topology:local
 ```
 
-`GET /healthz` returns `ok` for container health checks.
+`GET /healthz` returns `ok` (use `curl -k` against HTTPS).
 
 ## Run on 192.168.1.247
 
-`.env.remote` publishes the map on **192.168.1.247:43147**. Docker must be installed on that host.
+`.env.remote` publishes HTTPS on **443** and HTTP **80** (redirect) at **192.168.1.247**. Docker must be installed on that host.
 
 **On the host itself** (clone or copy this repo there):
 
@@ -61,7 +61,7 @@ REMOTE_USER=youruser ./scripts/deploy-remote.sh
 
 That creates a Docker context `topology-remote` (`ssh://youruser@192.168.1.247`) and runs `docker compose --env-file .env.remote up -d --build`.
 
-Then open [http://192.168.1.247:43147](http://192.168.1.247:43147). If publish fails because that address is not on the Docker host namespace, set `TOPOLOGY_BIND=0.0.0.0` in `.env.remote` and retry — the app is still reached at the same URL.
+Then open [https://192.168.1.247](https://192.168.1.247). If publish fails because that address is not on the Docker host namespace, set `TOPOLOGY_BIND=0.0.0.0` in `.env.remote` and retry — the app is still reached at the same URL.
 
 Manual equivalent on the host:
 

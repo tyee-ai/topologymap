@@ -17,7 +17,8 @@ cd "$ROOT"
 
 REMOTE_HOST="${REMOTE_HOST:-192.168.1.247}"
 REMOTE_USER="${REMOTE_USER:-${USER:-ubuntu}}"
-TOPOLOGY_PORT="${TOPOLOGY_PORT:-43147}"
+TOPOLOGY_HTTPS_PORT="${TOPOLOGY_HTTPS_PORT:-443}"
+TOPOLOGY_HTTP_PORT="${TOPOLOGY_HTTP_PORT:-80}"
 TOPOLOGY_BIND="${TOPOLOGY_BIND:-$REMOTE_HOST}"
 CONTEXT_NAME="${DOCKER_CONTEXT_NAME:-topology-remote}"
 MODE="ssh"
@@ -32,7 +33,8 @@ if [[ -f "$ROOT/.env.remote" ]]; then
   source "$ROOT/.env.remote"
   set +a
   REMOTE_HOST="${REMOTE_HOST:-192.168.1.247}"
-  TOPOLOGY_PORT="${TOPOLOGY_PORT:-43147}"
+  TOPOLOGY_HTTPS_PORT="${TOPOLOGY_HTTPS_PORT:-443}"
+  TOPOLOGY_HTTP_PORT="${TOPOLOGY_HTTP_PORT:-80}"
   TOPOLOGY_BIND="${TOPOLOGY_BIND:-$REMOTE_HOST}"
 fi
 
@@ -43,11 +45,11 @@ if ! command -v docker >/dev/null 2>&1; then
   exit 1
 fi
 
-export TOPOLOGY_BIND TOPOLOGY_PORT
+export TOPOLOGY_BIND TOPOLOGY_HTTPS_PORT TOPOLOGY_HTTP_PORT
 export TOPOLOGY_IMAGE="${TOPOLOGY_IMAGE:-gpu-fabric-topology:local}"
 
 if [[ "$MODE" == "local" ]]; then
-  echo "Building and starting on this host, published at http://${TOPOLOGY_BIND}:${TOPOLOGY_PORT}"
+  echo "Building and starting on this host, published at https://${TOPOLOGY_BIND}:${TOPOLOGY_HTTPS_PORT}"
   docker compose --env-file .env.remote up -d --build
 else
   if ! docker context inspect "$CONTEXT_NAME" >/dev/null 2>&1; then
@@ -58,6 +60,15 @@ else
   docker --context "$CONTEXT_NAME" compose --env-file .env.remote up -d --build
 fi
 
+URL_HOST="$REMOTE_HOST"
+if [[ "$TOPOLOGY_HTTPS_PORT" == "443" ]]; then
+  PUBLIC_URL="https://${URL_HOST}"
+else
+  PUBLIC_URL="https://${URL_HOST}:${TOPOLOGY_HTTPS_PORT}"
+fi
+
 echo
-echo "Topology map should be at http://${REMOTE_HOST}:${TOPOLOGY_PORT}"
-echo "Health: curl -sS http://${REMOTE_HOST}:${TOPOLOGY_PORT}/healthz"
+echo "Topology map should be at ${PUBLIC_URL}"
+echo "HTTP on port ${TOPOLOGY_HTTP_PORT} redirects to HTTPS."
+echo "Health: curl -skS ${PUBLIC_URL}/healthz"
+echo "First visit will warn about the self-signed certificate unless you mount your own at /etc/nginx/certs/tls.crt and tls.key."

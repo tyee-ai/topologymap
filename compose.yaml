@@ -3,7 +3,13 @@ services:
     build: .
     image: ${TOPOLOGY_IMAGE:-gpu-fabric-topology:local}
     ports:
-      - "${TOPOLOGY_BIND:-0.0.0.0}:${TOPOLOGY_PORT:-43147}:80"
+      - "${TOPOLOGY_BIND:-0.0.0.0}:${TOPOLOGY_HTTP_PORT:-43146}:80"
+      - "${TOPOLOGY_BIND:-0.0.0.0}:${TOPOLOGY_HTTPS_PORT:-43147}:443"
+    volumes:
+      - topology-certs:/etc/nginx/certs
     restart: unless-stopped
     extra_hosts:
       - "topology-host:192.168.1.247"
+
+volumes:
+  topology-certs:
