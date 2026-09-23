@@ -1,7 +1,9 @@
 services:
   topology-map:
     build: .
-    image: gpu-fabric-topology:local
+    image: ${TOPOLOGY_IMAGE:-gpu-fabric-topology:local}
     ports:
-      - "43147:80"
+      - "${TOPOLOGY_BIND:-0.0.0.0}:${TOPOLOGY_PORT:-43147}:80"
     restart: unless-stopped
+    extra_hosts:
+      - "topology-host:192.168.1.247"
