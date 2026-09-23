@@ -32,7 +32,7 @@ npm run preview
 docker compose up --build
 ```
 
-The container serves the production build with nginx on host port **43147** (`43147:80`). Open [http://127.0.0.1:43147](http://127.0.0.1:43147).
+The container serves the production build with nginx on host port **43147** (`0.0.0.0:43147:80`). Open [http://127.0.0.1:43147](http://127.0.0.1:43147).
 
 Equivalent without Compose:
 
@@ -42,6 +42,32 @@ docker run --rm -p 43147:80 gpu-fabric-topology:local
 ```
 
 `GET /healthz` returns `ok` for container health checks.
+
+## Run on 192.168.1.247
+
+`.env.remote` publishes the map on **192.168.1.247:43147**. Docker must be installed on that host.
+
+**On the host itself** (clone or copy this repo there):
+
+```bash
+./scripts/deploy-remote.sh --local
+```
+
+**From another machine** that can SSH to the host (builds on the remote Docker daemon):
+
+```bash
+REMOTE_USER=youruser ./scripts/deploy-remote.sh
+```
+
+That creates a Docker context `topology-remote` (`ssh://youruser@192.168.1.247`) and runs `docker compose --env-file .env.remote up -d --build`.
+
+Then open [http://192.168.1.247:43147](http://192.168.1.247:43147). If publish fails because that address is not on the Docker host namespace, set `TOPOLOGY_BIND=0.0.0.0` in `.env.remote` and retry — the app is still reached at the same URL.
+
+Manual equivalent on the host:
+
+```bash
+docker compose --env-file .env.remote up -d --build
+```
 
 ## Explore the map
 
