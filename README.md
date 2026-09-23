@@ -71,7 +71,8 @@ docker compose --env-file .env.remote up -d --build
 
 ## Explore the map
 
-- Drag the canvas to pan; scroll or use **Zoom + / Zoom − / Fit View**.
+- Drag the canvas to pan. Scroll to zoom (gentle steps) or use the **Zoom** slider / **Zoom + / Zoom − / Fit View**.
+- Click **Legend** or **SU / Rail filters** to expand or collapse those panels.
 - **Highlight Scalable Unit** or the SU pills to trace one SU’s downlinks and leaf-spine crossbar.
 - **Filter Rail** isolates one of the eight rails across all 16 SUs.
 - **View Layer** shows all links or only host↔leaf, leaf↔spine, or spine↔core.

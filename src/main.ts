@@ -4,7 +4,7 @@ import { coreSwitchesFromUrl, layoutFromUrl, updateCoreChrome, writeViewToUrl } 
 import { copyDrawIO, downloadDrawIO } from "./drawio.ts";
 import { buildFabricMarkup } from "./fabric.ts";
 import { filterRail, onSelectSU, setViewMode } from "./filters.ts";
-import { bindPanZoom, resetZoom, setTransform, zoomIn, zoomOut } from "./panzoom.ts";
+import { bindPanZoom, bindZoomSlider, resetZoom, setTransform, zoomIn, zoomOut } from "./panzoom.ts";
 import { state, type ViewMode } from "./state.ts";
 
 function rebuildFabric(): void {
@@ -84,6 +84,24 @@ function bindChrome(): void {
     button.addEventListener("click", () => {
       setShowCoreSwitches(button.dataset.coreDetail === "switches");
     });
+  });
+
+  const slider = document.getElementById("zoom-slider");
+  const zoomLabel = document.getElementById("zoom-label");
+  if (slider instanceof HTMLInputElement && zoomLabel) bindZoomSlider(slider, zoomLabel);
+
+  const drawer = document.getElementById("info-drawer");
+  const drawerToggle = document.getElementById("drawer-toggle");
+  drawerToggle?.addEventListener("click", () => {
+    drawer?.classList.toggle("collapsed");
+    drawerToggle.setAttribute("aria-expanded", drawer?.classList.contains("collapsed") ? "false" : "true");
+  });
+
+  const legend = document.querySelector(".legend-bar");
+  const legendToggle = document.getElementById("legend-toggle");
+  legendToggle?.addEventListener("click", () => {
+    legend?.classList.toggle("collapsed");
+    legendToggle.setAttribute("aria-expanded", legend?.classList.contains("collapsed") ? "false" : "true");
   });
 }
 

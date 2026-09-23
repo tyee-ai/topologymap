@@ -25,6 +25,11 @@
         <button class="btn primary" type="button" data-action="copy-drawio">Copy Draw.io XML</button>
         <button class="btn" type="button" data-action="download-drawio">Download .drawio</button>
         <button class="btn" type="button" data-action="zoom-in">Zoom +</button>
+        <label class="zoom-control">
+          <span class="control-label">Zoom</span>
+          <input id="zoom-slider" type="range" min="18" max="350" step="1" value="88" />
+          <span id="zoom-label">100%</span>
+        </label>
         <button class="btn" type="button" data-action="zoom-out">Zoom −</button>
         <button class="btn" type="button" data-action="fit-view">Fit View</button>
       </div>
@@ -83,18 +88,21 @@
       <div id="tooltip" role="tooltip"></div>
       <div id="toast" role="status">Copied Draw.io XML to Clipboard!</div>
 
-      <div id="info-drawer">
-        <h3>
-          <span id="drawer-title">16 SU / 16 SLG Unified Topology</span>
-          <span class="drawer-kicker">NCP RA Reference</span>
-        </h3>
-        <div class="drawer-metric"><span>Topology Standard:</span> <span>RA-11750-001 V4</span></div>
-        <div class="drawer-metric"><span>Scalable Units (SUs):</span> <span>16 SUs (SU 1..16)</span></div>
-        <div class="drawer-metric"><span>Switch-Leaf Groups:</span> <span>16 SLGs (SLG 1..16)</span></div>
-        <div class="drawer-metric"><span>Leaf-to-Spine Mesh:</span> <span class="accent">Foreground Highlighted (1.5px)</span></div>
-        <div class="drawer-metric"><span>Core Groups:</span> <span id="drawer-core-layout">16 × 4 (64 MQM9790)</span></div>
-        <div class="drawer-metric"><span>Spine-to-Core:</span> <span class="accent" id="drawer-spine-core">Core Group N → all Spine Ns (Fig. 13)</span></div>
-        <div class="drawer-metric"><span>Bisection Ratio:</span> <span class="ok">1:1 Non-Blocking</span></div>
+      <div id="info-drawer" class="collapsed">
+        <button type="button" id="drawer-toggle" class="drawer-toggle" aria-expanded="false">
+          <span id="drawer-title">Legend</span>
+          <span class="drawer-chevron" aria-hidden="true">▸</span>
+        </button>
+        <div class="drawer-body">
+          <p class="drawer-kicker">16 SU / 16 SLG · NCP RA Reference</p>
+          <div class="drawer-metric"><span>Topology Standard:</span> <span>RA-11750-001 V4</span></div>
+          <div class="drawer-metric"><span>Scalable Units (SUs):</span> <span>16 SUs (SU 1..16)</span></div>
+          <div class="drawer-metric"><span>Switch-Leaf Groups:</span> <span>16 SLGs (SLG 1..16)</span></div>
+          <div class="drawer-metric"><span>Leaf-to-Spine Mesh:</span> <span class="accent">Foreground Highlighted (1.5px)</span></div>
+          <div class="drawer-metric"><span>Core Groups:</span> <span id="drawer-core-layout">16 × 4 (64 MQM9790)</span></div>
+          <div class="drawer-metric"><span>Spine-to-Core:</span> <span class="accent" id="drawer-spine-core">Core Group N → all Spine Ns (Fig. 13)</span></div>
+          <div class="drawer-metric"><span>Bisection Ratio:</span> <span class="ok">1:1 Non-Blocking</span></div>
+        </div>
       </div>
 
       <svg id="canvas" viewBox="0 0 3540 1480" aria-label="4K GPU fabric topology">
@@ -113,7 +121,12 @@
       </svg>
     </div>
 
-    <div class="legend-bar">
+    <div class="legend-bar collapsed">
+      <button type="button" id="legend-toggle" class="legend-toggle" aria-expanded="false">
+        SU / Rail filters
+        <span class="drawer-chevron" aria-hidden="true">▸</span>
+      </button>
+      <div class="legend-body">
       <span class="legend-title">Select SU (1..16):</span>
       <button class="legend-pill active" type="button" id="su-btn-all" data-su="all">Show All</button>
       <button class="legend-pill" type="button" id="su-btn-1" data-su="1">SU 1</button>
@@ -144,6 +157,7 @@
       <button class="legend-pill rail-pill-btn" type="button" id="rail-btn-6" data-rail="6"><span class="dot" style="background:#0284C7;"></span>Rail 6</button>
       <button class="legend-pill rail-pill-btn" type="button" id="rail-btn-7" data-rail="7"><span class="dot" style="background:#7C3AED;"></span>Rail 7</button>
       <button class="legend-pill rail-pill-btn" type="button" id="rail-btn-8" data-rail="8"><span class="dot" style="background:#EA580C;"></span>Rail 8</button>
+      </div>
     </div>
 
     <script type="module" src="/src/main.ts"></script>
